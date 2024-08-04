@@ -7,6 +7,7 @@ contract TokenMaster is ERC721  {
 
     address public owner;
     uint256 public totalOccasions;
+    uint256 public totalSupply;
 
     struct Occasion {
         uint256 id;
@@ -26,6 +27,9 @@ contract TokenMaster is ERC721  {
     }
 
     mapping(uint256 => Occasion) occasions;
+    mapping(uint256 => mapping(address => bool)) public hasBought;
+    mapping(uint256 => mapping(uint256 => address)) public seatTaken;
+    mapping(uint256 => uint256[]) seatsTaken;
 
 
     constructor
@@ -66,7 +70,37 @@ contract TokenMaster is ERC721  {
 
 
 
-     function getOccasion(uint256 _id) public view returns (Occasion memory) {
+     function mint(uint256 _id, uint256 _seat) public payable {
+
+        // Require that _id is not 0 or less than total occasions...
+        require(_id != 0, "Occasion ID should not be Zero");
+        require(_id <= totalOccasions, "Invalid Occasion ID");
+
+        // Require that ETH sent is greater than cost...
+        require(msg.value >= occasions[_id].cost, "Insufficient Cost");
+
+        // Require that the seat is not taken, and the seat exists...
+        require(seatTaken[_id][_seat] == address(0), "Seat Already Taken");
+        require(_seat <= occasions[_id].maxTickets, "Inavlid Seat No");
+
+
+        occasions[_id].tickets -= 1; // <-- Update ticket count
+
+        hasBought[_id][msg.sender] = true; // <-- Update buying status
+        seatTaken[_id][_seat] = msg.sender; // <-- Assign seat
+
+        seatsTaken[_id].push(_seat); // <-- Update seats currently taken
+
+        totalSupply++;
+
+        _safeMint(msg.sender, totalSupply);
+    }
+
+    function getOccasion(uint256 _id) public view returns (Occasion memory) {
         return occasions[_id];
+    }
+
+    function getSeatsTaken(uint256 _id) public view returns (uint256[] memory) {
+        return seatsTaken[_id];
     }
 }

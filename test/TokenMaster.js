@@ -17,7 +17,7 @@ const OCCASION_LOCATION = "Austin, Texas"
     describe("TokenMaster", () => {
         let tokenMaster;
 
-        let deployer,user;
+        let deployer,buyer;
         
 
         describe("Deployment",() => {
@@ -25,7 +25,7 @@ const OCCASION_LOCATION = "Austin, Texas"
         beforeEach(async () => {
 
 
-            [deployer,user] = await ethers.getSigners();
+            [deployer,buyer] = await ethers.getSigners();
             
             const TokenMaster = await ethers.getContractFactory("TokenMaster");
             tokenMaster = await TokenMaster.deploy(NAME,SYMBOL);
@@ -41,10 +41,10 @@ const OCCASION_LOCATION = "Austin, Texas"
         
             await transaction.wait()
 
-
+        
         })
 
-        it("Sete the name", async () => {
+        it("Sets the name", async () => {
             let name = await tokenMaster.name();
             expect(name).to.equal(NAME)
         })
@@ -76,6 +76,46 @@ const OCCASION_LOCATION = "Austin, Texas"
         it('Updates occasions count', async () => {
           const totalOccasions = await tokenMaster.totalOccasions()
           expect(totalOccasions).to.be.equal(1)
+        })
+    })
+
+
+    describe("Minting", () => {
+        const ID = 1
+        const SEAT = 50
+        const AMOUNT = ethers.utils.parseUnits('1', 'ether')
+    
+         beforeEach(async () => {
+        console.log('beforeeach')
+        transaction = await tokenMaster.connect(buyer).mint(ID, SEAT, { value: AMOUNT });
+        await transaction.wait();
+         });
+    
+        it('Updates ticket count', async () => {
+          const occasion = await tokenMaster.getOccasion(1)
+          expect(occasion.tickets).to.be.equal(OCCASION_MAX_TICKETS - 1)
+        })
+    
+        it('Updates buying status', async () => {
+          const status = await tokenMaster.hasBought(ID, buyer.address)
+          expect(status).to.be.equal(true)
+        })
+    
+        it('Updates seat status', async () => {
+          const owner = await tokenMaster.seatTaken(ID, SEAT)
+          expect(owner).to.equal(buyer.address)
+        })
+    
+        it('Updates overall seating status', async () => {
+          const seats = await tokenMaster.getSeatsTaken(ID)
+          console.log(seats)
+          expect(seats.length).to.equal(1)
+          expect(seats[0]).to.equal(SEAT)
+        })
+    
+        it('Updates the contract balance', async () => {
+          const balance = await ethers.provider.getBalance(tokenMaster.address)
+          expect(balance).to.be.equal(AMOUNT)
         })
     })
 
