@@ -14,7 +14,6 @@ import TokenMaster from './abis/TokenMaster.json'
 import config from './config.json'
 
 function App() {
-
   const [provider, setProvider] = useState(null)
   const [account, setAccount] = useState(null)
 
@@ -22,8 +21,7 @@ function App() {
   const [occasions, setOccasions] = useState([])
 
   const [occasion, setOccasion] = useState({})
-  const [toggle, setToggle] = useState(false)
-
+  const [toggle, setToggle] = useState(false) 
   
 
 
@@ -73,6 +71,8 @@ function App() {
         <h2 className="header__title"><strong>Event</strong> Tickets</h2>
       </header>
 
+      <Sort />
+
       <div className='cards'>
         {occasions.map((occasion, index) => (
           <Card
@@ -88,6 +88,16 @@ function App() {
           />
         ))}
       </div>
+
+      {toggle && (
+        <SeatChart
+          occasion={occasion}
+          tokenMaster={tokenMaster}
+          provider={provider}
+          setToggle={setToggle}
+        />
+      )}
+
 
     </div>
   );
