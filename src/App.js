@@ -15,15 +15,42 @@ import config from './config.json'
 
 function App() {
 
-  const [account, setAccount] = useState(null)
   const [provider, setProvider] = useState(null)
+  const [account, setAccount] = useState(null)
+
+  const [tokenMaster, setTokenMaster] = useState(null)
+  const [occasions, setOccasions] = useState([])
+
+  const [occasion, setOccasion] = useState({})
+  const [toggle, setToggle] = useState(false)
+
+  
 
 
   const loadBlockchainData = async () => {
+    console.log("Function Starts")
     const provider = new ethers.providers.Web3Provider(window.ethereum)
     setProvider(provider)
+    console.log("Fetching Network")
 
     const network = await provider.getNetwork()
+    console.log("Fetching Contract")
+
+    const tokenMaster = new ethers.Contract(config[network.chainId].TokenMaster.address, TokenMaster, provider)
+    setTokenMaster(tokenMaster)
+    console.log("Fetching Total Occassions")
+
+    const totalOccasions = await tokenMaster.totalOccasions()
+    const occasions = []
+    console.log("Fetching  Occassions")
+
+    for (var i = 1; i <= totalOccasions; i++) {
+      const occasion = await tokenMaster.getOccasion(i)
+      occasions.push(occasion)
+    }
+
+    console.log(occasions)
+    setOccasions(occasions)
     
 
     window.ethereum.on('accountsChanged', async () => {
@@ -46,6 +73,21 @@ function App() {
         <h2 className="header__title"><strong>Event</strong> Tickets</h2>
       </header>
 
+      <div className='cards'>
+        {occasions.map((occasion, index) => (
+          <Card
+            occasion={occasion}
+            id={index + 1}
+            tokenMaster={tokenMaster}
+            provider={provider}
+            account={account}
+            toggle={toggle}
+            setToggle={setToggle}
+            setOccasion={setOccasion}
+            key={index}
+          />
+        ))}
+      </div>
 
     </div>
   );
