@@ -3,8 +3,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-contract TokenMaster is ERC721  {
-
+contract TokenMaster is ERC721 {
     address public owner;
     uint256 public totalOccasions;
     uint256 public totalSupply;
@@ -20,32 +19,23 @@ contract TokenMaster is ERC721  {
         string location;
     }
 
-
-    modifier onlyOwner() {
-    require(msg.sender == owner);
-    _;
-    }
-
     mapping(uint256 => Occasion) occasions;
     mapping(uint256 => mapping(address => bool)) public hasBought;
     mapping(uint256 => mapping(uint256 => address)) public seatTaken;
     mapping(uint256 => uint256[]) seatsTaken;
 
-
-    constructor
-    (
-        string memory _name,
-        string memory _symbol
-    ) 
-    ERC721(_name, _symbol)
-    {
-
-        owner = msg.sender;
-
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
     }
 
+    constructor(
+        string memory _name,
+        string memory _symbol
+    ) ERC721(_name, _symbol) {
+        owner = msg.sender;
+    }
 
-    
     function list(
         string memory _name,
         uint256 _cost,
@@ -67,12 +57,8 @@ contract TokenMaster is ERC721  {
         );
     }
 
-
-
-
-     function mint(uint256 _id, uint256 _seat) public payable {
-
-        // Require that _id is not 0 or less than total occasions...
+    function mint(uint256 _id, uint256 _seat) public payable {
+               // Require that _id is not 0 or less than total occasions...
         require(_id != 0, "Occasion ID should not be Zero");
         require(_id <= totalOccasions, "Invalid Occasion ID");
 
@@ -102,5 +88,10 @@ contract TokenMaster is ERC721  {
 
     function getSeatsTaken(uint256 _id) public view returns (uint256[] memory) {
         return seatsTaken[_id];
+    }
+
+    function withdraw() public onlyOwner {
+        (bool success, ) = owner.call{value: address(this).balance}("");
+        require(success);
     }
 }
